@@ -30,8 +30,8 @@
 #define SMOKE_GROUND_OFFSET		6
 #define MIN_ONLINE_PLAYERS		2
 
-#define MAX_PLAYER_LEVEL		201
-#define MAX_PLAYER_EXP			350000000000
+#define MAX_PLAYER_LEVEL		101
+#define MAX_PLAYER_EXP			16000000
 #define MAX_PLAYER_RP			1000000
 #define MAX_DISTANCE_AIDKIT		300
 #define MAX_HUDMESSAGES			7
@@ -153,7 +153,7 @@ new const SzItemPopis[][] =
 	"Kazde 3sek. dostanes +10 HP",
 	"Pri spawne obdrzis +500 AP.",
 	"Kazde kolo +100 HP, zmensena rychlost",
-	"Stlac pismeno 'E' pre doplnenie Zivota",
+	"Stlac pismeno 'C' pre doplnenie Zivota",
 	"Bez spatneho narazu zbrani",
 	"+15 Poskodenie",
 	"+25 Poskodenie",
@@ -188,17 +188,7 @@ new const experience_level[MAX_PLAYER_LEVEL] =
 	333804, 368599, 407015, 449428, 496254, 547953, 605032, 668051, 737627, 814445,
 	899257, 992895, 1096278, 1210421, 1336443, 1475581, 1629200, 1798808, 1986068, 2192818,
 	2421087, 2673114, 2951373, 3258594, 3597792, 3972294, 4385776, 4842295, 5346332, 5902831,
-	6517253, 7195629, 7944614, 8771558, 9684577, 10692629, 11805606, 13034431, 14391160, 15889109,
-	17542976, 19368992, 21385073, 23611006, 26068632, 28782069, 31777943, 35085654, 38737661, 42769801, 
-	47221641, 52136869, 57563718, 63555443, 70170840, 77474828, 85539082, 94442737, 104273167, 115126838,
-	127110260, 140341028, 154948977, 171077457, 188884740, 208545572, 230252886, 254219702, 280681209, 309897078,
-	342154009, 377768545, 417090179, 460504778, 508438379, 561361362, 619793069, 684306901, 755535943, 834179178,
-	921008346, 1016875516, 1122721449, 1239584831, 1368612462, 1511070513, 1668356950, 1842015252, 2033749558, 2245441392,
-	2479168121, 2737223349, 3022139416, 3336712255, 3684028823, 4067497401, 4490881032, 4958334456, 5474444875, 6044276973,
-	6673422613, 7368055713, 8134992831, 8981760056, 9916666866, 10948887667, 12088551825, 13346843067, 14736109228, 16269983424,
-	17963517835, 19833331415, 21897772978, 24177101254, 26693683698, 29472215980, 32539964331, 35927033113, 39666660232, 43795543315,
-	48354199826, 53387364671, 58944429193, 65079925854, 71854063374, 79333317570, 87591083692, 96708396670, 106774726318, 117888855318,
-	130159848595, 143708123591, 158666631937, 175182164138, 193416790048, 213549449297, 235777707252, 287416243706, 300000000000, 340000000000
+	6517253, 7195629, 7944614, 8771558, 9684577, 10692629, 11805606, 13034431, 14391160, 15889109
 };
 
 new gPlayerPoints[33];
@@ -581,8 +571,8 @@ public plugin_init()
 	register_cvar( "cod_maxspeed",			"1600" );
 	register_cvar( "cod_minplayers_plant",		"4" );
 	register_cvar( "cod_bpammo",			"1" );
-	cvar_flash 	= register_cvar("amx_showc4flash", "0");
-	cvar_showteam 	= register_cvar("amx_showc4timer", "3");
+	register_cvar( "cod_c4flash", 			"0" );
+	register_cvar( "cod_c4timer", 			"3" );
 	
 	register_cvar( "cod_start_realprice",		"5" );
 	register_cvar( "cod_start_realprice_vip", 	"10" );
@@ -616,6 +606,9 @@ public plugin_init()
 	cvar_maxspeed		= get_cvar_num( "cod_maxspeed" );
 	cvar_minplayers_plant	= get_cvar_num( "cod_minplayers_plant" );
 	cvar_bpammo		= get_cvar_num( "cod_bpammo" );
+	
+	cvar_flash 		= get_cvar_num( "cod_c4flash" );
+	cvar_showteam 		= get_cvar_num( "cod_c4timer" );
 	
 	cvar_startrp		= get_cvar_num( "cod_start_realprice" );
 	cvar_startrp_vip	= get_cvar_num( "cod_start_realprice_vip" );
@@ -753,6 +746,70 @@ public plugin_precache( )
 	sprite_blast	= 	precache_model("sprites/cod/dexplo.spr");
 }
 
+public client_authorized(id)
+{
+	if (get_user_flags(id) & VIP_ACCESS)
+	{
+		vPlayerModel[id] = true;
+		vBonusHP[id] = true;
+		vBonusEXP[id] = true;
+		vDamageHud[id] = true;
+		gPlayerRealPrice[id] = cvar_startrp_vip;
+	}
+}
+
+public client_connect(id)
+{
+	gPlayerClass[id] = 0;
+	gPlayerLevel[id] = 0;
+	gPlayerExperience[id] = 0;
+	gPlayerRealPrice[id] = cvar_startrp;
+	gPlayerPoints[id] = 0;
+	gPlayerHealth[id] = 0;
+	gPlayerInteligence[id] = 0;
+	gPlayerStamina[id] = 0;
+	gPlayerSpeed[id] = 0;
+	gPlayerHeal[id] = 0;
+	gPlayerFast[id] = 0.0;
+	
+	gShopMaxHealth[id] = 0;
+	gShopMaxFullEquip[id] = 0;
+	gShopMaxRandomItem[id] = 0;
+	gShopMaxDefusKit[id] = 0;	
+	gShopMaxTeleNade[id] = 0;
+	
+	nKillZoom[id] = true;
+	nShowHelpMsg[id] = true;
+	nStartEffect[id] = true;
+	nFastMenu[id] = true;
+	nWeaponSkins[id] = true;
+	
+	get_user_authid(id, g_szAuthID[id], charsmax(g_szAuthID[]));
+	
+	remove_task(id+TASK_SHOW_INFORMATION);
+	remove_task(id+TASK_SHOW_ADVERTISEMENT);    
+	remove_task(id+TASK_SET_SPEED);
+	remove_task(id+TASK_PLAYER_RESPAWN);
+	remove_task(id+TASK_HEALTH_REGENERATION);
+	
+	set_task(10.0, "ShowAdvertisement", id+TASK_SHOW_ADVERTISEMENT);
+	set_task(3.0, "ShowInformation", id+TASK_SHOW_INFORMATION);
+	
+	Func_RemoveItem(id);
+}
+
+public client_disconnect(id)
+{
+	remove_task(id+TASK_SHOW_INFORMATION);
+	remove_task(id+TASK_SHOW_ADVERTISEMENT);    
+	remove_task(id+TASK_SET_SPEED);
+	remove_task(id+TASK_PLAYER_RESPAWN);
+	remove_task(id+TASK_HEALTH_REGENERATION);
+	
+	Func_RemoveItem(id);
+	SaveData(id);
+}
+
 public Fwd_CmdStart( id, uc_handle )
 {
 	if ( !is_user_alive(id) )
@@ -816,6 +873,15 @@ public Ham_PlayerSpawn( id )
 	gShopMaxRandomItem[id] = 0;
 	gShopMaxDefusKit[id] = 0;
 	gShopMaxTeleNade[id] = 0;
+	
+	nWeaponSkins[id] = true;
+	strip_user_weapons(id);
+	give_item(id, "weapon_knife");
+	switch(get_user_team(id))
+	{
+		case 1: give_item(id, "weapon_glock18");
+		case 2: give_item(id, "weapon_usp");
+	}
 		
 	remove_task(id+TASK_SPAWN);
 	
@@ -825,16 +891,8 @@ public Ham_PlayerSpawn( id )
 	}
 	if ( gPlayerNewClass[id] )
 	{
-		nWeaponSkins[id] = true;
 		gPlayerClass[id] = gPlayerNewClass[id];
 		gPlayerNewClass[id] = 0;
-		strip_user_weapons(id);
-		give_item(id, "weapon_knife");
-		switch(get_user_team(id))
-		{
-			case 1: give_item(id, "weapon_glock18");
-			case 2: give_item(id, "weapon_usp");
-		}
 		LoadData(id, gPlayerClass[id]);
 	}
 	if ( !gPlayerClass[id] )
@@ -993,7 +1051,6 @@ public LogEvent_RoundStart()
 		gShopMaxHealth[id] = 0;
 		gShopMaxFullEquip[id] = 0;
 		gShopMaxRandomItem[id] = 0;
-		gShopMaxDefusKit[id] = 0;
 		gShopMaxTeleNade[id] = 0;
 		
 		set_task(0.1, "Func_SetPlayerClassSpeed", id+TASK_SET_SPEED);
@@ -1237,12 +1294,6 @@ public Event_DeathMsg()
 	}
 	Func_CheckPlayerLevel(attacker);
 	
-	gShopMaxHealth[id] = 0;
-	gShopMaxFullEquip[id] = 0;
-	gShopMaxRandomItem[id] = 0;
-	gShopMaxDefusKit[id] = 0;
-	gShopMaxTeleNade[id] = 0;
-	
 	if ( gPlayerItem[id][0] == 7 && random_num(1, gPlayerItem[id][1]) == 1 )
 		set_task(0.1, "Func_PlayerRespawn", id+TASK_PLAYER_RESPAWN);
 	return PLUGIN_CONTINUE;
@@ -1257,71 +1308,14 @@ public Ham_PlayerKilled(victim, attacker)
 	{
 		set_task(0.1, "Func_KillerZoomEffect", victim);
 	}
+	
+	gShopMaxHealth[victim] = 0;
+	gShopMaxFullEquip[victim] = 0;
+	gShopMaxRandomItem[victim] = 0;
+	gShopMaxDefusKit[victim] = 0;
+	gShopMaxTeleNade[victim] = 0;
+	cs_set_user_defuse(victim, 0);
 	return PLUGIN_CONTINUE;
-}
-
-public client_authorized(id)
-{
-	if (get_user_flags(id) & VIP_ACCESS)
-	{
-		vPlayerModel[id] = true;
-		vBonusHP[id] = true;
-		vBonusEXP[id] = true;
-		vDamageHud[id] = true;
-		gPlayerRealPrice[id] = cvar_startrp_vip;
-	}
-}
-
-public client_connect(id)
-{
-	gPlayerClass[id] = 0;
-	gPlayerLevel[id] = 0;
-	gPlayerExperience[id] = 0;
-	gPlayerRealPrice[id] = cvar_startrp;
-	gPlayerPoints[id] = 0;
-	gPlayerHealth[id] = 0;
-	gPlayerInteligence[id] = 0;
-	gPlayerStamina[id] = 0;
-	gPlayerSpeed[id] = 0;
-	gPlayerHeal[id] = 0;
-	gPlayerFast[id] = 0.0;
-	
-	gShopMaxHealth[id] = 0;
-	gShopMaxFullEquip[id] = 0;
-	gShopMaxRandomItem[id] = 0;
-	gShopMaxDefusKit[id] = 0;	
-	gShopMaxTeleNade[id] = 0;
-	
-	nKillZoom[id] = true;
-	nShowHelpMsg[id] = true;
-	nStartEffect[id] = true;
-	nFastMenu[id] = true;
-	nWeaponSkins[id] = true;
-	
-	get_user_authid(id, g_szAuthID[id], charsmax(g_szAuthID[]));
-	
-	remove_task(id+TASK_SHOW_INFORMATION);
-	remove_task(id+TASK_SHOW_ADVERTISEMENT);    
-	remove_task(id+TASK_SET_SPEED);
-	remove_task(id+TASK_PLAYER_RESPAWN);
-	remove_task(id+TASK_HEALTH_REGENERATION);
-	
-	set_task(10.0, "ShowAdvertisement", id+TASK_SHOW_ADVERTISEMENT);
-	set_task(3.0, "ShowInformation", id+TASK_SHOW_INFORMATION);
-	
-	Func_RemoveItem(id);
-}
-
-public client_disconnect(id)
-{
-	remove_task(id+TASK_SHOW_INFORMATION);
-	remove_task(id+TASK_SHOW_ADVERTISEMENT);    
-	remove_task(id+TASK_SET_SPEED);
-	remove_task(id+TASK_PLAYER_RESPAWN);
-	remove_task(id+TASK_HEALTH_REGENERATION);
-	
-	Func_RemoveItem(id);
-	SaveData(id);
 }
 
 public Ham_PlayerJump(id)
@@ -1433,7 +1427,6 @@ public LogEvent_RoundEnd()
 		gShopMaxHealth[ tempid ] = 0;
 		gShopMaxFullEquip[ tempid ] = 0;
 		gShopMaxRandomItem[ tempid ]= 0;
-		gShopMaxDefusKit[ tempid ] = 0;
 	}
 }
 
@@ -2076,7 +2069,7 @@ public Cmd_UpgradeMenu_Handler(id, menu, item)
 	{ 
 		case 0: 
 		{    
-			if ( gPlayerInteligence[id] < 200 )
+			if ( gPlayerInteligence[id] < 50 )
 			{
 				gPlayerInteligence[id]++;
 				client_cmd(id, "spk fvox/launch_select2.wav");
@@ -2092,7 +2085,7 @@ public Cmd_UpgradeMenu_Handler(id, menu, item)
 		}
 		case 1: 
 		{    
-			if ( gPlayerHealth[id] < 180 )
+			if ( gPlayerHealth[id] < 50 )
 			{
 				gPlayerHealth[id]++;
 				client_cmd(id, "spk fvox/beep.wav");
@@ -2108,7 +2101,7 @@ public Cmd_UpgradeMenu_Handler(id, menu, item)
 		}
 		case 2: 
 		{    
-			if ( gPlayerStamina[id] < 200 )
+			if ( gPlayerStamina[id] < 50 )
 			{
 				gPlayerStamina[id]++;
 				client_cmd(id, "spk fvox/launch_glow1.wav");
@@ -2124,7 +2117,7 @@ public Cmd_UpgradeMenu_Handler(id, menu, item)
 		}
 		case 3: 
 		{    
-			if ( gPlayerSpeed[id] < 150 )
+			if ( gPlayerSpeed[id] < 50 )
 			{
 				gPlayerSpeed[id]++;
 				client_cmd(id, "spk fvox/launch_glow1.wav");
@@ -2534,6 +2527,7 @@ public Message_BlockMoney(msg_id, msg_dest, msg_entity)
 	fm_cs_set_user_money(msg_entity, 0);
 	return PLUGIN_HANDLED;
 }  
+
 
 public Cmd_ShopMenu(id)
 {
@@ -3359,13 +3353,35 @@ public ShowInformation(id)
 		if(target == 0)
 			return PLUGIN_CONTINUE;
 		
-		set_hudmessage(255, 255, 255, 0.55, 0.18, 0, 0.0, 0.3, 0.0, 0.0, 2);
-		ShowSyncHudMsg(id, g_sync_hudmsg[1], "| Trieda : %s^n| Exp : %i / %i^n| Level : %i^n| Item : %s^n| RealPrice : %i", SzClassName[gPlayerClass[target]], gPlayerExperience[target], experience_level[gPlayerLevel[target]], gPlayerLevel[target], SzItemName[gPlayerItem[target][0]], gPlayerRealPrice[target]);
+		if ( gPlayerLevel[id] == MAX_PLAYER_LEVEL )
+		{
+			set_hudmessage(10, 230, 10, 0.02, 0.18, 0, 0.0, 0.3, 0.0, 0.0);
+			ShowSyncHudMsg(id, g_sync_hudmsg[1], "| Trieda : %s^n| Exp : %i / %i^n| Level : %i^n| Item : %s^n| RealPrice : %i", SzClassName[gPlayerClass[target]], MAX_PLAYER_EXP, MAX_PLAYER_EXP, MAX_PLAYER_LEVEL, SzItemName[gPlayerItem[target][0]], gPlayerRealPrice[target]);
+		} else if ( gPlayerExperience[id] == MAX_PLAYER_EXP )
+		{
+			set_hudmessage(10, 230, 10, 0.02, 0.18, 0, 0.0, 0.3, 0.0, 0.0);
+			ShowSyncHudMsg(id, g_sync_hudmsg[1], "| Trieda : %s^n| Exp : %i / %i^n| Level : %i^n| Item : %s^n| RealPrice : %i", SzClassName[gPlayerClass[target]], MAX_PLAYER_EXP, MAX_PLAYER_EXP, gPlayerLevel[target], SzItemName[gPlayerItem[target][0]], gPlayerRealPrice[target]);
+		} else 	
+		{
+			set_hudmessage(255, 255, 255, 0.55, 0.18, 0, 0.0, 0.3, 0.0, 0.0, 2);
+			ShowSyncHudMsg(id, g_sync_hudmsg[1], "| Trieda : %s^n| Exp : %i / %i^n| Level : %i^n| Item : %s^n| RealPrice : %i", SzClassName[gPlayerClass[target]], gPlayerExperience[target], experience_level[gPlayerLevel[target]], gPlayerLevel[target], SzItemName[gPlayerItem[target][0]], gPlayerRealPrice[target]);
+		}
 		
 		return PLUGIN_CONTINUE;
 	}
-	set_hudmessage(10, 230, 10, 0.02, 0.18, 0, 0.0, 0.3, 0.0, 0.0);
-	ShowSyncHudMsg(id, g_sync_hudmsg[1], "| Trieda : %s^n| Exp : %i / %i^n| Level : %i^n| Item : %s^n| RealPrice : %i", SzClassName[gPlayerClass[id]], gPlayerExperience[id], experience_level[gPlayerLevel[id]], gPlayerLevel[id], SzItemName[gPlayerItem[id][0]], gPlayerRealPrice[id]);
+	if ( gPlayerLevel[id] == MAX_PLAYER_LEVEL )
+	{
+		set_hudmessage(10, 230, 10, 0.02, 0.18, 0, 0.0, 0.3, 0.0, 0.0);
+		ShowSyncHudMsg(id, g_sync_hudmsg[1], "| Trieda : %s^n| Exp : %i / %i^n| Level : %i^n| Item : %s^n| RealPrice : %i", SzClassName[gPlayerClass[id]], MAX_PLAYER_EXP, MAX_PLAYER_EXP, MAX_PLAYER_LEVEL, SzItemName[gPlayerItem[id][0]], gPlayerRealPrice[id]);
+	} else if ( gPlayerExperience[id] == MAX_PLAYER_EXP )
+	{
+		set_hudmessage(10, 230, 10, 0.02, 0.18, 0, 0.0, 0.3, 0.0, 0.0);
+		ShowSyncHudMsg(id, g_sync_hudmsg[1], "| Trieda : %s^n| Exp : %i / %i^n| Level : %i^n| Item : %s^n| RealPrice : %i", SzClassName[gPlayerClass[id]], MAX_PLAYER_EXP, MAX_PLAYER_EXP, gPlayerLevel[id], SzItemName[gPlayerItem[id][0]], gPlayerRealPrice[id]);
+	} else 	
+	{
+		set_hudmessage(10, 230, 10, 0.02, 0.18, 0, 0.0, 0.3, 0.0, 0.0);
+		ShowSyncHudMsg(id, g_sync_hudmsg[1], "| Trieda : %s^n| Exp : %i / %i^n| Level : %i^n| Item : %s^n| RealPrice : %i", SzClassName[gPlayerClass[id]], gPlayerExperience[id], experience_level[gPlayerLevel[id]], gPlayerLevel[id], SzItemName[gPlayerItem[id][0]], gPlayerRealPrice[id]);
+	}
 	
 	if ( get_user_health(id) >= 250 )
 	{
