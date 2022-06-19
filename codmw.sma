@@ -36,12 +36,6 @@
 #define MAX_DISTANCE_AIDKIT		300
 #define MAX_HUDMESSAGES			7
 
-#define ICON_R 				255
-#define ICON_G 				170
-#define ICON_B 				0
-
-#define ANTI_LAGG 			7.0
-
 #define HIDE_MONEY			(1<<5)
 #define INVALID_WEAPONS			((1<<CSW_KNIFE)|(1<<CSW_HEGRENADE)|(1<<CSW_FLASHBANG)|(1<<CSW_SMOKEGRENADE)|(1<<CSW_C4))
 
@@ -66,7 +60,9 @@ new g_msg_crosshair;
 new g_maxplayers;
 
 new cvar_defuse_bonus;
+new cvar_kill_bonus;
 new cvar_plant_bonus;
+new cvar_perround_bonus	;
 new cvar_rp_bonus;
 
 new cvar_vip_bonus;
@@ -541,6 +537,10 @@ public plugin_init()
 	register_logevent( "LogEvent_RoundStart", 2, "1=Round_Start" ); 
 	register_logevent( "LogEvent_PlantBomb", 3, "2=Planted_The_Bomb" );
 	register_logevent( "LogEvent_RoundEnd", 2, "1=Round_End" );
+
+	
+	register_event("SendAudio", "LogEvent_WinT", "a", "2&%!MRAD_terwin");
+	register_event("SendAudio", "LogEvent_WinCT", "a", "2&%!MRAD_ctwin");
 	
 	register_event( "SendAudio", "Event_DefuseBomb", "a", "2&%!MRAD_BOMBDEF" );
 	register_event( "BarTime", "Event_PlayerDefusing", "be", "1=10", "1=5" );
@@ -561,6 +561,8 @@ public plugin_init()
 	
 	register_cvar( "cod_kill_bonus", 		"20" );
 	register_cvar( "cod_bomb_bonus", 		"30" );
+	register_cvar( "cod_defus_bonus", 		"30" );
+	register_cvar( "cod_round_bonus", 		"50" );
 	register_cvar( "cod_rp_bonus", 			"4" );
 	
 	register_cvar( "cod_vip_bonus", 		"40" );
@@ -571,8 +573,6 @@ public plugin_init()
 	register_cvar( "cod_maxspeed",			"1600" );
 	register_cvar( "cod_minplayers_plant",		"4" );
 	register_cvar( "cod_bpammo",			"1" );
-	register_cvar( "cod_c4flash", 			"0" );
-	register_cvar( "cod_c4timer", 			"3" );
 	
 	register_cvar( "cod_start_realprice",		"5" );
 	register_cvar( "cod_start_realprice_vip", 	"10" );
@@ -594,8 +594,10 @@ public plugin_init()
 	register_cvar( "cod_shopcost_telenade",		"80" );
 	register_cvar( "cod_shopmax_telenade",		"1" );
 	
-	cvar_defuse_bonus 	= get_cvar_num( "cod_kill_bonus" );
+	cvar_kill_bonus 	= get_cvar_num( "cod_kill_bonus" );
+	cvar_defuse_bonus 	= get_cvar_num( "cod_defus_bonus" );
 	cvar_plant_bonus 	= get_cvar_num( "cod_bomb_bonus" );
+	cvar_perround_bonus	= get_cvar_num( "cod_round_bonus" );
 	cvar_rp_bonus 		= get_cvar_num( "cod_rp_bonus" );
 	
 	cvar_vip_bonus	 	= get_cvar_num( "cod_vip_bonus" );
@@ -607,8 +609,8 @@ public plugin_init()
 	cvar_minplayers_plant	= get_cvar_num( "cod_minplayers_plant" );
 	cvar_bpammo		= get_cvar_num( "cod_bpammo" );
 	
-	cvar_flash 		= get_cvar_num( "cod_c4flash" );
-	cvar_showteam 		= get_cvar_num( "cod_c4timer" );
+	cvar_flash 		= register_cvar( "cod_c4flash", 	"0" );
+	cvar_showteam 		= register_cvar( "cod_c4timer", "3" );
 	
 	cvar_startrp		= get_cvar_num( "cod_start_realprice" );
 	cvar_startrp_vip	= get_cvar_num( "cod_start_realprice_vip" );
@@ -1239,10 +1241,10 @@ public Event_DeathMsg()
 	{
 		new new_bonus = 0;
 		
-		new_bonus += cvar_defuse_bonus;
+		new_bonus += cvar_kill_bonus;
 		
 		if ( gPlayerClass[id] == Rambo && gPlayerClass[attacker] != Rambo )
-			new_bonus += cvar_defuse_bonus*2;
+			new_bonus += cvar_kill_bonus*2;
 		
 		if ( gPlayerLevel[id] > gPlayerLevel[attacker] )
 			new_bonus += gPlayerLevel[id] - gPlayerLevel[attacker];
@@ -1292,6 +1294,13 @@ public Event_DeathMsg()
 			gPlayerExperience[attacker] += 50;
 		}
 	}
+	
+	gShopMaxHealth[id] = 0;
+	gShopMaxFullEquip[id] = 0;
+	gShopMaxRandomItem[id] = 0;
+	gShopMaxDefusKit[id] = 0;
+	gShopMaxTeleNade[id] = 0;
+	cs_set_user_defuse(id, 0);
 	Func_CheckPlayerLevel(attacker);
 	
 	if ( gPlayerItem[id][0] == 7 && random_num(1, gPlayerItem[id][1]) == 1 )
@@ -1308,13 +1317,6 @@ public Ham_PlayerKilled(victim, attacker)
 	{
 		set_task(0.1, "Func_KillerZoomEffect", victim);
 	}
-	
-	gShopMaxHealth[victim] = 0;
-	gShopMaxFullEquip[victim] = 0;
-	gShopMaxRandomItem[victim] = 0;
-	gShopMaxDefusKit[victim] = 0;
-	gShopMaxTeleNade[victim] = 0;
-	cs_set_user_defuse(victim, 0);
 	return PLUGIN_CONTINUE;
 }
 
@@ -1406,7 +1408,8 @@ public LogEvent_PlantBomb()
 		case 3: get_players(players, num, "ac");
 		default: return;
 	}
-	for(i = 0; i < num; ++i) set_task(1.0, "update_timer", players[i]);
+	for(i = 0; i < num; ++i)
+		set_task(1.0, "update_timer", players[i]);
 }
 
 public LogEvent_RoundEnd()
@@ -1429,6 +1432,39 @@ public LogEvent_RoundEnd()
 		gShopMaxRandomItem[ tempid ]= 0;
 	}
 }
+
+
+
+public LogEvent_WinT()
+{
+	new players[32], num;
+	get_players(players, num);
+	
+	new player;
+	for(new i = 0; i < num; i++)
+	{
+		player = players[i];
+		gPlayerExperience[player] += cvar_perround_bonus;
+		ColorMsg( player, "^1[^4%s^1] Dostal si^4 %i XP^1 za vyhrate kolo.", PLUGIN, cvar_perround_bonus);
+		Func_CheckPlayerLevel(player);
+	}
+}
+
+public LogEvent_WinCT()
+{
+	new players[32], num;
+	get_players(players, num);
+	
+	new player;
+	for(new i = 0; i < num; i++)
+	{
+		player = players[i];
+		gPlayerExperience[player] += cvar_perround_bonus;
+		ColorMsg( player, "^1[^4%s^1] Dostal si^4 %i XP^1 za vyhrate kolo.", PLUGIN, cvar_perround_bonus);
+		Func_CheckPlayerLevel(player);
+	}
+}
+
 
 public Event_DefuseBomb()
 {
