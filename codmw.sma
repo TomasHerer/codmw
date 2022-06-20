@@ -213,7 +213,13 @@ enum
 	Rambo,		// 10
 	CptMorgan,	// 11
 	Terminator,	// 12
-	Legionar 	// 13
+	Legionar,	// 13
+	Saboteur,	// 14
+	PatrolSoldier,	// 15
+	Guverner,	// 16
+	ProSniper,	// 17
+	Guard		// 18
+	
 };
 
 new const SzClassHealth[] = 
@@ -231,7 +237,12 @@ new const SzClassHealth[] =
 	130,	// 10
 	120,	// 11
 	170,	// 12
-	130 	// 13
+	130, 	// 13
+	150,	// 14
+	120,	// 15
+	130,	// 16
+	140,	// 17
+	120	// 18
 };
 
 new const Float:SzClassSpeed[] = 
@@ -249,7 +260,12 @@ new const Float:SzClassSpeed[] =
 	1.15,	// 10
 	1.0,	// 11
 	1.3,	// 12
-	1.1	// 13
+	1.1,	// 13
+	1.2,	// 14
+	0.8,	// 15
+	1.1,	// 16
+	1.2,	// 17
+	1.0	// 18
 };
 
 new const SzClassArmor[] = 
@@ -267,7 +283,12 @@ new const SzClassArmor[] =
 	150,	// 10
 	100,	// 11
 	200,	// 12
-	130	// 13
+	130,	// 13
+	80,	// 14
+	120,	// 15
+	100,	// 16
+	100,	// 17
+	200	// 18
 };
 
 new const SzClassName[][] = 
@@ -285,7 +306,12 @@ new const SzClassName[][] =
 	"Rambo",		// 10
 	"Cpt. Morgan [VIP]",	// 11
 	"Terminator [VIP]",	// 12
-	"Legionar[VIP]"		// 13
+	"Legionar [VIP]",	// 13
+	"Saboter",		// 14
+	"Patrol Soldier",	// 15
+	"Guverner",		// 16
+	"Pro Sniper [VIP]",	// 17
+	"Ochrankar"		// 18
 };
 
 new const SzClassPopis[][] = 
@@ -301,10 +327,14 @@ new const SzClassPopis[][] =
 	"^1Zbrane:^4 AUG^1 |Zdravie:^4 130^1 |Vesta:^4 100^1 |Rychlost:^4 100^1 |Schopnost:^4 Vsetky granaty, Dynamit",
 	"^1Zbrane:^4 M3^1 |Zdravie:^4 100^1 |Vesta:^4 0^1 |Rychlost:^4 145^1 |Schopnost:^4 Ziadna",
 	"^1Zbrane:^4 Famas^1 |Zdravie:^4 130^1 |Vesta:^4 100^1 |Rychlost:^4 120^1 |Schopnost:^4 +20HP za kill, Dvojskok",
-	"^1Zbrane:^4 XM1014, Deagle^1 |Zdravie:^4 120^1 |Vesta:^4 100^1 |Rychlost:^4 100^1 |Schopnost:^4 Dynamit",
+	"^1Zbrane:^4 XM1014, M3, Deagle^1 |Zdravie:^4 120^1 |Vesta:^4 100^1 |Rychlost:^4 100^1 |Schopnost:^4 Dynamit",
 	"^1Zbrane:^4 M249^1 |Zdravie:^4 170^1 |Vesta:^4 200^1 |Rychlost:^4 130^1 |Schopnost:^4 +3 Rakety",
-	"^1Zbrane:^4 AK47, M4A1, Deagle^1 |Zdravie:^4 130^1 |Vesta:^4 130^1 |Rychlost:^4 110^1 |Schopnost:^4 Lekarnicka"
-	
+	"^1Zbrane:^4 AK47, M4A1, Deagle^1 |Zdravie:^4 130^1 |Vesta:^4 130^1 |Rychlost:^4 110^1 |Schopnost:^4 Lekarnicka",
+	"^1Zbrane:^4 TMP, FiveSeven^1 |Zdravie:^4 150^1 |Vesta:^4 80^1 |Rychlost:^4 120^1 |Schopnost:^4 Ziadna",
+	"^1Zbrane:^4 SG550, Elite^1 |Zdravie:^4 120^1 |Vesta:^4 120^1 |Rychlost:^4 80^1 |Schopnost:^4 Raketa",
+	"^1Zbrane:^4 SG552, P228^1 |Zdravie:^4 130^1 |Vesta:^4 100^1 |Rychlost:^4 110^1 |Schopnost:^4 HE Granat, +15 DMG",
+	"^1Zbrane:^4 G3SG1, AWP, Deagle^1 |Zdravie:^4 140^1 |Vesta:^4 100^1 |Rychlost:^4 120^1 |Schopnost:^4 Lekarnicka, 1/3 sanca na respawnutie",
+	"^1Zbrane:^4 Galil, USP^1 |Zdravie:^4 120^1 |Vesta:^4 200^1 |Rychlost:^4 100^1 |Schopnost:^4 HE Granat, FlashBang"
 };
 
 new g_iFirstAidKit[33];
@@ -537,10 +567,6 @@ public plugin_init()
 	register_logevent( "LogEvent_RoundStart", 2, "1=Round_Start" ); 
 	register_logevent( "LogEvent_PlantBomb", 3, "2=Planted_The_Bomb" );
 	register_logevent( "LogEvent_RoundEnd", 2, "1=Round_End" );
-
-	
-	register_event("SendAudio", "LogEvent_WinT", "a", "2&%!MRAD_terwin");
-	register_event("SendAudio", "LogEvent_WinCT", "a", "2&%!MRAD_ctwin");
 	
 	register_event( "SendAudio", "Event_DefuseBomb", "a", "2&%!MRAD_BOMBDEF" );
 	register_event( "BarTime", "Event_PlayerDefusing", "be", "1=10", "1=5" );
@@ -865,6 +891,187 @@ public Fwd_CmdStart( id, uc_handle )
 	return FMRES_IGNORED;
 }
 
+
+
+public Event_CurWeapon(id)
+{
+	if ( freezetime || !gPlayerClass[id] )
+		return PLUGIN_CONTINUE;
+			
+	new weapon = read_data(2);
+	
+	if (nWeaponSkins[id])
+	{
+		switch (weapon)
+		{
+			case CSW_AK47:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[0] );
+				set_pev(id,pev_weaponmodel2, p_weaponmodels[0] );
+			}
+			case CSW_AUG:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[1] );
+				set_pev(id,pev_weaponmodel2, p_weaponmodels[1] );
+			}
+			case CSW_AWP:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[2] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[2] );
+			}
+			case CSW_C4:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[3] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[3] );
+			}
+			case CSW_DEAGLE:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[4] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[4] );
+			}	
+			case CSW_ELITE:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[5] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[5] );
+			}
+			case CSW_FAMAS:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[6] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[6] );
+			}
+			case CSW_FIVESEVEN:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[7] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[7] );
+			}
+			case CSW_FLASHBANG:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[8]);
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[8] );
+			}
+			case CSW_G3SG1:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[9] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[9] );
+			}
+			case CSW_GALIL:
+			{ 
+				set_pev(id, pev_viewmodel2,  v_weaponmodels[10] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[10] );
+			}
+			case CSW_GLOCK18:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[11] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[11] );
+			}
+			case CSW_HEGRENADE:
+			{ 			
+				set_pev(id, pev_viewmodel2, v_weaponmodels[12] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[12] );
+			}
+			case CSW_KNIFE:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[13] );
+				set_pev(id, pev_viewmodel2, "models/codmw/v_knife_r.mdl" );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[13] );
+			}
+			case CSW_M3:
+			{ 
+				set_pev(id, pev_viewmodel2,  v_weaponmodels[14] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[14] );
+			}
+			case CSW_M4A1:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[15] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[15] );
+			}
+			case CSW_M249:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[16] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[16] );
+			}
+			case CSW_MAC10:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[17] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[17] );
+			}
+			case CSW_MP5NAVY:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[18] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[18] );
+			}
+			case CSW_P90:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[19] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[19] );
+			}
+			case CSW_P228:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[20] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[20] );
+			}
+			case CSW_SCOUT:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[21] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[21] );
+			}
+			case CSW_SG550:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[22] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[22] );
+			}
+			case CSW_SG552:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[23] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[23] );
+			}
+			case CSW_SMOKEGRENADE:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[24] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[24] );
+			}
+			case CSW_TMP:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[25] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[25] );
+			}
+			case CSW_UMP45:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[26] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[26] );
+			}
+			case CSW_USP:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[27] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[27] );
+			}
+			case CSW_XM1014:
+			{ 
+				set_pev(id, pev_viewmodel2, v_weaponmodels[28] );
+				set_pev(id, pev_weaponmodel2, p_weaponmodels[28] );
+			}
+		}
+	}
+
+	Func_SetPlayerClassSpeed(id);
+	
+	if(weapon == CSW_C4)
+		g_planter = id;
+		
+	if ( cvar_bpammo )
+	{
+		if(weapon==CSW_C4 || weapon==CSW_KNIFE || weapon==CSW_HEGRENADE || weapon==CSW_SMOKEGRENADE || weapon==CSW_FLASHBANG)
+			return PLUGIN_CONTINUE;
+		
+		if(cs_get_user_bpammo(id, weapon)!=CSW_MAXAMMO[weapon])
+			cs_set_user_bpammo(id, weapon, CSW_MAXAMMO[weapon]);
+		
+		return PLUGIN_CONTINUE;	
+	}
+	return PLUGIN_HANDLED;
+}
+
+
 public Ham_PlayerSpawn( id )
 {
 	if ( !is_user_alive(id) || !is_user_connected(id) )
@@ -879,11 +1086,11 @@ public Ham_PlayerSpawn( id )
 	nWeaponSkins[id] = true;
 	strip_user_weapons(id);
 	give_item(id, "weapon_knife");
-	switch(get_user_team(id))
+	/*switch(get_user_team(id))
 	{
 		case 1: give_item(id, "weapon_glock18");
 		case 2: give_item(id, "weapon_usp");
-	}
+	}*/
 		
 	remove_task(id+TASK_SPAWN);
 	
@@ -965,6 +1172,7 @@ public Ham_PlayerSpawn( id )
 		case CptMorgan:
 		{
 			give_item(id, "weapon_xm1014");
+			give_item(id, "weapon_m3");
 			give_item(id, "weapon_deagle");
 			g_iDynamit[id] = 1;
 		}
@@ -979,6 +1187,37 @@ public Ham_PlayerSpawn( id )
 			give_item(id, "weapon_ak47");
 			give_item(id, "weapon_deagle");
 			g_iFirstAidKit[id] = 1;
+		} 
+		case Saboteur:
+		{
+			give_item(id, "weapon_tmp");
+			give_item(id, "weapon_fiveseven");
+		} 
+		case PatrolSoldier:
+		{
+			give_item(id, "weapon_sg550");
+			give_item(id, "weapon_elite");
+			g_iRocket[id] = 1;
+		} 
+		case Guverner:
+		{
+			give_item(id, "weapon_sg552");
+			give_item(id, "weapon_p228");
+			give_item(id, "weapon_hegrenade");
+		} 
+		case ProSniper:
+		{
+			give_item(id, "weapon_g3sg1");
+			give_item(id, "weapon_awp");
+			give_item(id, "weapon_deagle");
+			g_iFirstAidKit[id] = 1;
+		} 
+		case Guard:
+		{
+			give_item(id, "weapon_galil");
+			give_item(id, "weapon_usp");
+			give_item(id, "weapon_hegrenade");
+			give_item(id, "weapon_flashbang");
 		} 
 	}
 	
@@ -1160,7 +1399,7 @@ public Ham_PlayerDamage(this, idinflictor, idattacker, Float:damage, damagebits)
 	if(weapon == CSW_AWP && gPlayerItem[idattacker][0] == 13)
 		damage=float(health);
 	
-	if(gPlayerItem[idattacker][0] == 21)
+	if(gPlayerItem[idattacker][0] == 21 || gPlayerClass[idattacker] == Guverner )
 		damage+=15;
 	
 	if(gPlayerItem[idattacker][0] == 22)
@@ -1303,7 +1542,7 @@ public Event_DeathMsg()
 	cs_set_user_defuse(id, 0);
 	Func_CheckPlayerLevel(attacker);
 	
-	if ( gPlayerItem[id][0] == 7 && random_num(1, gPlayerItem[id][1]) == 1 )
+	if ( gPlayerItem[id][0] == 7 && random_num(1, gPlayerItem[id][1]) == 1 && gPlayerClass[id] == ProSniper )
 		set_task(0.1, "Func_PlayerRespawn", id+TASK_PLAYER_RESPAWN);
 	return PLUGIN_CONTINUE;
 }
@@ -1430,41 +1669,15 @@ public LogEvent_RoundEnd()
 		gShopMaxHealth[ tempid ] = 0;
 		gShopMaxFullEquip[ tempid ] = 0;
 		gShopMaxRandomItem[ tempid ]= 0;
+		
+		if ( is_user_alive( tempid ) )
+		{
+			gPlayerExperience[ tempid ] += cvar_perround_bonus;
+			ColorMsg( tempid, "^1[^4%s^1] Dostal si^4 %i XP^1 za prezitie.", PLUGIN, cvar_perround_bonus);
+			Func_CheckPlayerLevel( tempid );
+		}
 	}
 }
-
-
-
-public LogEvent_WinT()
-{
-	new players[32], num;
-	get_players(players, num);
-	
-	new player;
-	for(new i = 0; i < num; i++)
-	{
-		player = players[i];
-		gPlayerExperience[player] += cvar_perround_bonus;
-		ColorMsg( player, "^1[^4%s^1] Dostal si^4 %i XP^1 za vyhrate kolo.", PLUGIN, cvar_perround_bonus);
-		Func_CheckPlayerLevel(player);
-	}
-}
-
-public LogEvent_WinCT()
-{
-	new players[32], num;
-	get_players(players, num);
-	
-	new player;
-	for(new i = 0; i < num; i++)
-	{
-		player = players[i];
-		gPlayerExperience[player] += cvar_perround_bonus;
-		ColorMsg( player, "^1[^4%s^1] Dostal si^4 %i XP^1 za vyhrate kolo.", PLUGIN, cvar_perround_bonus);
-		Func_CheckPlayerLevel(player);
-	}
-}
-
 
 public Event_DefuseBomb()
 {
@@ -1618,6 +1831,13 @@ public Cmd_ClassMenu_Handler(id, menu, item)
 	if(item == Legionar && !(get_user_flags(id) & VIP_ACCESS))
 	{
 		ColorMsg( id, "^1[^4%s^1]^4 Nemas opravnenie si vybrat postavu^3 %s^4!!! Zakup si ho^3 /vip^4.", PLUGIN, SzClassName[Legionar]);
+		Cmd_ClassMenu(id);
+		return PLUGIN_CONTINUE;
+	
+	}
+	if(item == ProSniper && !(get_user_flags(id) & VIP_ACCESS))
+	{
+		ColorMsg( id, "^1[^4%s^1]^4 Nemas opravnenie si vybrat postavu^3 %s^4!!! Zakup si ho^3 /vip^4.", PLUGIN, SzClassName[ProSniper]);
 		Cmd_ClassMenu(id);
 		return PLUGIN_CONTINUE;
 	
@@ -2731,185 +2951,6 @@ public Cmd_ShopMenu_Handler(id, menu, item)
 			
 			ColorMsg( id, "^1[^4%s^1] Kupil si^3 Teleportacny Granat^1.", SHOPNAME );
 		}
-	}
-	return PLUGIN_HANDLED;
-}
-
-
-public Event_CurWeapon(id)
-{
-	if ( freezetime || !gPlayerClass[id] )
-		return PLUGIN_CONTINUE;
-			
-	new weapon = read_data(2);
-	
-	if (nWeaponSkins[id])
-	{
-		switch (weapon)
-		{
-			case CSW_AK47:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[0] );
-				set_pev(id,pev_weaponmodel2, p_weaponmodels[0] );
-			}
-			case CSW_AUG:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[1] );
-				set_pev(id,pev_weaponmodel2, p_weaponmodels[1] );
-			}
-			case CSW_AWP:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[2] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[2] );
-			}
-			case CSW_C4:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[3] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[3] );
-			}
-			case CSW_DEAGLE:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[4] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[4] );
-			}	
-			case CSW_ELITE:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[5] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[5] );
-			}
-			case CSW_FAMAS:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[6] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[6] );
-			}
-			case CSW_FIVESEVEN:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[7] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[7] );
-			}
-			case CSW_FLASHBANG:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[8]);
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[8] );
-			}
-			case CSW_G3SG1:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[9] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[9] );
-			}
-			case CSW_GALIL:
-			{ 
-				set_pev(id, pev_viewmodel2,  v_weaponmodels[10] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[10] );
-			}
-			case CSW_GLOCK18:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[11] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[11] );
-			}
-			case CSW_HEGRENADE:
-			{ 			
-				set_pev(id, pev_viewmodel2, v_weaponmodels[12] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[12] );
-			}
-			case CSW_KNIFE:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[13] );
-				set_pev(id, pev_viewmodel2, "models/codmw/v_knife_r.mdl" );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[13] );
-			}
-			case CSW_M3:
-			{ 
-				set_pev(id, pev_viewmodel2,  v_weaponmodels[14] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[14] );
-			}
-			case CSW_M4A1:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[15] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[15] );
-			}
-			case CSW_M249:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[16] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[16] );
-			}
-			case CSW_MAC10:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[17] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[17] );
-			}
-			case CSW_MP5NAVY:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[18] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[18] );
-			}
-			case CSW_P90:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[19] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[19] );
-			}
-			case CSW_P228:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[20] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[20] );
-			}
-			case CSW_SCOUT:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[21] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[21] );
-			}
-			case CSW_SG550:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[22] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[22] );
-			}
-			case CSW_SG552:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[23] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[23] );
-			}
-			case CSW_SMOKEGRENADE:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[24] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[24] );
-			}
-			case CSW_TMP:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[25] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[25] );
-			}
-			case CSW_UMP45:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[26] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[26] );
-			}
-			case CSW_USP:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[27] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[27] );
-			}
-			case CSW_XM1014:
-			{ 
-				set_pev(id, pev_viewmodel2, v_weaponmodels[28] );
-				set_pev(id, pev_weaponmodel2, p_weaponmodels[28] );
-			}
-		}
-	}
-
-	Func_SetPlayerClassSpeed(id);
-	
-	if(weapon == CSW_C4)
-		g_planter = id;
-		
-	if ( cvar_bpammo )
-	{
-		if(weapon==CSW_C4 || weapon==CSW_KNIFE || weapon==CSW_HEGRENADE || weapon==CSW_SMOKEGRENADE || weapon==CSW_FLASHBANG)
-			return PLUGIN_CONTINUE;
-		
-		if(cs_get_user_bpammo(id, weapon)!=CSW_MAXAMMO[weapon])
-			cs_set_user_bpammo(id, weapon, CSW_MAXAMMO[weapon]);
-		
-		return PLUGIN_CONTINUE;	
 	}
 	return PLUGIN_HANDLED;
 }
