@@ -10,7 +10,7 @@
 #include < nvault >
 
 #define PLUGIN 				"Call Of Duty"
-#define VERSION 			"3.5"
+#define VERSION 			"3.8"
 #define AUTHOR 				"QTM_Peyote"
 #define AUTHOR2 			"Origin Corp."
 #define CREDITS				"^4 johnC^1 ,^4 GranTorino"
