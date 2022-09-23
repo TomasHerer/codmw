@@ -1807,18 +1807,6 @@ public Event_Damage(id)
 	
 	if ( gPlayerItem[attacker][0] == 12 && random_num(1, gPlayerItem[id][1]) == 1 )
 		Display_Fade(id,1<<14,1<<14 ,1<<16,255,155,50,230);
-
-	if(get_user_flags(attacker) & VIP_ACCESS )
-	{
-		set_hudmessage(255, 0, 0, 0.45, 0.50, 2, 0.1, 4.0, 0.1, 0.1, -1);
-		ShowSyncHudMsg(id, g_sync_hudmsg[4], "%i^n", damage);
-	}
-
-	if(get_user_flags(attacker) & VIP_ACCESS )
-	{
-		set_hudmessage(0, 100, 200, -1.0, 0.55, 2, 0.1, 4.0, 0.02, 0.02, -1);
-		ShowSyncHudMsg(attacker, g_sync_hudmsg[4], "%i^n", damage);
-	}
 	
 	if(get_user_team(id) != get_user_team(attacker))
 	{
