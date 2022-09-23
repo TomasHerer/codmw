@@ -85,7 +85,6 @@ new g_planter;
 new g_defuser;
 new g_msg_hideweapon;
 
-new g_msg_printmessage;
 new g_msg_crosshair;
 new g_maxplayers;
 
@@ -928,16 +927,6 @@ public plugin_init()
 	register_clcmd( "say_team /setting", 	"Cmd_HerneNastavenia" );
 	register_clcmd( "buyequip", 		"Cmd_HerneNastavenia" );
 	
-	register_clcmd( "say /vip", 		"Cmd_VipMenu" );
-	register_clcmd( "say_team /vip", 	"Cmd_VipMenu" );
-	register_clcmd( "say vip", 		"Cmd_VipMenu" );
-	register_clcmd( "say_team vip", 	"Cmd_VipMenu" );
-	
-	register_clcmd( "say /vips", 		"Cmd_PrintVipPlayers" );
-	register_clcmd( "say_team /vips", 	"Cmd_PrintVipPlayers" );
-	register_clcmd( "say vips", 		"Cmd_PrintVipPlayers" );
-	register_clcmd( "say_team vips", 	"Cmd_PrintVipPlayers" );
-	
 	register_clcmd( "radio3",		"Func_UseItem" );
 	register_clcmd( "+coduseitem",		"Func_UseItem" );
 	
@@ -960,7 +949,6 @@ public plugin_init()
 	register_menucmd( register_menuid("BankChangeMenuSelect"), BANK2_MENU, "Cmd_BankChangeMenu_Handler" );
 	register_menucmd( register_menuid("SettingMenuSelect"), SETT_MENU, "Cmd_HerneNastavenia_Handler" );
 	register_menucmd( register_menuid("HelpMenuSelect"), HELP_MENU, "Cmd_HelpMenu_Handler" );
-	register_menucmd( register_menuid("VipMenuSelect"), VIP_MENU, "Cmd_VipMenu_Handler" );
 	
 	for( new i = 0;i < sizeof( SzBlockCommand ); i++ )
 		register_clcmd( SzBlockCommand[ i ], "CommandBlock" );
@@ -980,7 +968,6 @@ public plugin_init()
 	
 	g_msg_screenfade	= get_user_msgid( "ScreenFade" );	
 	g_msg_hideweapon 	= get_user_msgid( "HideWeapon" );
-	g_msg_printmessage	= get_user_msgid( "SayText" );
 	g_msg_crosshair		= get_user_msgid( "Crosshair" );
 	g_iScoreInfo   		= get_user_msgid("ScoreInfo");
 	
@@ -2400,7 +2387,7 @@ public Cmd_ModMenu_Handler(id, key)
 		case 3: Cmd_UpgradeMenu(id);
 		case 4: Cmd_HelpMenu(id);
 		case 5: Cmd_HerneNastavenia(id);
-		case 6: Cmd_VipMenu(id);
+		case 6: client_cmd(id, "say /vip");
 		case 7: Cmd_Spect(id);
 		case 9: return PLUGIN_HANDLED;
 	}
@@ -2534,37 +2521,6 @@ public Func_ChangeModels( id )
 		ColorMsg( id, "^1[^4%s^1] Modely/Skiny zbrani boli^4 ZAPNUTE", PLUGIN );
 	}
 	return PLUGIN_CONTINUE;
-}
-
-public Cmd_VipMenu(id)
-{
-	new VipTexT[256];
-	
-	new nLen = format( VipTexT, 255, "\rVip Menu: ^n %s", ( get_user_flags(id) & VIP_ACCESS ) ? "\r- Mas aktivovane VIP" : "Nemas aktivovane VIP" );
-	nLen += format( VipTexT[nLen], 255-nLen, "^n\y1. \wVlozit Kod" );
-	nLen += format( VipTexT[nLen], 255-nLen, "^n\y2. \wZiskat Kod" );
-	nLen += format( VipTexT[nLen], 255-nLen, "^n\y3. \wVIP Vyhody" );
-	nLen += format( VipTexT[nLen], 255-nLen, "^n\y4. \wOnline VIP Hraci" );
-	nLen += format( VipTexT[nLen], 255-nLen, "^n^n\y5. Herne Menu" );
-	nLen += format( VipTexT[nLen], 255-nLen, "^n^n\y0. \wKoniec" );
-	
-	show_menu(id, VIP_MENU, VipTexT, -1, "VipMenuSelect" );
-}
-
-public Cmd_VipMenu_Handler(id, key) 
-{
-	SelectSounds(id);
-
-	switch ( key ) 
-	{
-		case 0: return PLUGIN_HANDLED;
-		case 1: return PLUGIN_HANDLED;
-		case 2: Cmd_ShowVipMotd(id);
-		case 3: Cmd_PrintVipPlayers(id);
-		case 4: Cmd_ModMenu(id);
-		case 9: return PLUGIN_HANDLED;
-	}
-	return PLUGIN_HANDLED;
 }
 
 public Cmd_UpgradeMenu(id)
@@ -4895,48 +4851,6 @@ public Func_BGRadio()
 	set_task(20.0, "Func_BGRadio");
 }
 
-public Cmd_PrintVipPlayers(user) 
-{
-	new vipnames[33][32];
-	new message[256];
-	new id, count, x, len;
-	
-	for (id = 1; id <= g_maxplayers; id++)	
-		if (is_user_connected(id))
-			if (get_user_flags(id) & VIP_ACCESS)
-				get_user_name(id, vipnames[count++], 31);
-	
-	len = format(message, 255, "^x03(%i)^x01VIP ONLINE: ^x04", count);
-	
-	if (count > 0) 
-	{
-		for (x = 0; x < count; x++) 
-		{
-			len += format(message[len], 255-len, "^x04%s %s ", vipnames[x] , x < (count-1) ? "^x01,^x04 " : "");
-			
-			if (len > 96) 
-			{
-				print_message(user, message);
-				len = format(message, 255, "^x04 ");
-			}
-		}
-		print_message(user, message);
-	}
-	else
-	{
-		len += format(message[len], 255-len, "Ziadny VIP hrac nie je ^x04ONLINE^x01.");
-		print_message(user, message);
-	}
-}
-
-print_message(id, msg[]) 
-{
-	message_begin(MSG_ONE, g_msg_printmessage, {0, 0, 0}, id);
-	write_byte(id);
-	write_string(msg);
-	message_end();
-}
-
 public Fwd_PlayerPreThink( id ) 
 {
 	if ( is_user_alive(id) ) 
@@ -5695,6 +5609,3 @@ stock ColorMsg( const id , const input[] , any:... )
 		}
 	}
 }
-/* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
-*{\\ rtf1\\ ansi\\ deff0{\\ fonttbl{\\ f0\\ fnil Tahoma;}}\n\\ viewkind4\\ uc1\\ pard\\ lang1051\\ f0\\ fs16 \n\\ par }
-*/
